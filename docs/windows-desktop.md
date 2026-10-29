@@ -6,7 +6,9 @@
 
 ```powershell
 npm ci
+npm run test:desktop
 npm run desktop:win
+node scripts/test-windows-installed.mjs
 ```
 
 完成後會在 `dist/` 產生兩種檔案：
@@ -15,6 +17,14 @@ npm run desktop:win
 - `DarkLord-Bot-Portable-<版本>.exe`：免安裝版，直接執行即可。
 
 Windows 建置需要在 Windows 建置機執行。最簡單的方式是把程式碼放到 GitHub，從 Actions 手動執行「建置 Windows 版」，完成後到該次工作流程的 Artifacts 下載 EXE。
+
+工作流程會將安裝版安裝到包含中文與空格的暫存路徑，實際開啟主視窗、檢查網頁與樣式資源，再關閉並重新開啟。啟動測試通過後才上傳 EXE；診斷記錄另外保留在 `darklord-bot-windows-smoke-logs`。
+
+## 啟動失敗
+
+0.1.1 修正了 0.1.0 安裝包漏掉內建服務依賴、導致「本機服務啟動逾時」的問題。使用舊版遇到此訊息時，請關閉舊程式並安裝 0.1.1 或更新版本。
+
+若新版仍然失敗，錯誤對話框會列出 `startup.log` 的完整位置。記錄包含本機服務輸出與啟動錯誤，請提供錯誤文字及記錄以便排查。記錄儲存在 Electron 使用者資料目錄的 `logs/startup.log`，不會自動傳送到網路。
 
 ## 發布給其他人下載
 

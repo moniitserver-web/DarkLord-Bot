@@ -9,6 +9,7 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    timeout-minutes: 15
     permissions:
       contents: read
 
@@ -25,10 +26,32 @@ jobs:
       - name: 安裝套件
         run: npm ci
 
+      - name: 型別檢查
+        run: npm run typecheck
+
+      - name: 桌面啟動測試
+        run: npm run test:desktop
+
       - name: 建置 Windows 安裝檔與免安裝檔
         run: npm run desktop:win
 
+      - name: 安裝後煙霧測試
+        id: installed-smoke-test
+        timeout-minutes: 5
+        run: node scripts/test-windows-installed.mjs
+        env:
+          SMOKE_LOG_DIR: smoke-logs
+
+      - name: 上傳煙霧測試診斷資料
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: darklord-bot-windows-smoke-logs
+          path: smoke-logs
+          if-no-files-found: warn
+
       - name: 上傳 EXE
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: darklord-bot-windows

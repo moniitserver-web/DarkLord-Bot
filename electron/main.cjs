@@ -4,12 +4,15 @@ const fs = require("node:fs");
 const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
+const { createStartupLogger, observeServerProcess } = require("./startup-logging.cjs");
 
 const HOST = "127.0.0.1";
 const DEV_PORT = 3001;
 const PACKAGED_PORT = 3817;
 let serverProcess = null;
 let mainWindow = null;
+let startupLogger = null;
+let serverObserver = null;
 
 function wait(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -44,9 +47,17 @@ function requestPage(url) {
 
 async function waitForServer(port) {
   const url = `http://${HOST}:${port}/`;
+  const probeOrFailure = async operation => {
+    if (serverObserver?.error) throw serverObserver.error;
+    const result = serverObserver
+      ? await Promise.race([operation, serverObserver.failure])
+      : await operation;
+    if (result instanceof Error) throw result;
+    return result;
+  };
   for (let attempt = 0; attempt < 60; attempt += 1) {
-    if (await requestPage(url)) return url;
-    await wait(250);
+    if (await probeOrFailure(requestPage(url))) return url;
+    await probeOrFailure(wait(250));
   }
   throw new Error("DarkLord Bot 本機服務啟動逾時。");
 }
@@ -66,8 +77,9 @@ function startNextServer(port) {
       cwd: path.join(__dirname, ".."),
       env: { ...environment, PORT: String(DEV_PORT), NODE_ENV: "development" },
       windowsHide: true,
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
     });
+    serverObserver = observeServerProcess(serverProcess, startupLogger);
     return DEV_PORT;
   }
 
@@ -77,8 +89,9 @@ function startNextServer(port) {
     cwd: path.dirname(serverPath),
     env: environment,
     windowsHide: true,
-    stdio: "ignore",
+    stdio: ["ignore", "pipe", "pipe"],
   });
+  serverObserver = observeServerProcess(serverProcess, startupLogger);
   return port;
 }
 
@@ -88,7 +101,7 @@ function stopNextServer() {
   serverProcess = null;
 }
 
-function createWindow(url) {
+async function createWindow(url) {
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 960,
@@ -105,19 +118,32 @@ function createWindow(url) {
   });
 
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-  mainWindow.loadURL(url);
   mainWindow.on("closed", () => { mainWindow = null; });
+  await mainWindow.loadURL(url);
 }
 
 async function boot() {
+  startupLogger = createStartupLogger(path.join(app.getPath("userData"), "logs", "startup.log"));
+  startupLogger.write("app", `Starting DarkLord Bot ${app.getVersion()} (${process.platform} ${process.arch})`);
   const port = app.isPackaged ? await choosePort(PACKAGED_PORT) : DEV_PORT;
   const actualPort = startNextServer(port);
+  startupLogger.write("app", `Waiting for local service at ${HOST}:${actualPort}`);
   const url = await waitForServer(actualPort);
-  createWindow(url);
+  await createWindow(url);
+  startupLogger.write("app", "Main window loaded successfully");
+}
+
+function showStartupError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  startupLogger?.write("app", error instanceof Error ? error.stack || message : message);
+  const logDetails = startupLogger
+    ? `\n\n啟動記錄：${startupLogger.path}${startupLogger.error ? `\n記錄無法寫入：${startupLogger.error.message}` : ""}`
+    : "";
+  dialog.showErrorBox("DarkLord Bot 啟動失敗", `${message}${logDetails}`);
 }
 
 app.whenReady().then(() => boot().catch(error => {
-  dialog.showErrorBox("DarkLord Bot 啟動失敗", error instanceof Error ? error.message : String(error));
+  showStartupError(error);
   app.quit();
 }));
 
@@ -128,5 +154,5 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) boot().catch(error => dialog.showErrorBox("DarkLord Bot 啟動失敗", String(error)));
+  if (BrowserWindow.getAllWindows().length === 0) boot().catch(showStartupError);
 });
