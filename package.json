@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "desktop:dev": "electron .",
     "desktop:build": "npm run build && electron-builder --dir",
-    "desktop:win": "npm run build && electron-builder --win nsis portable",
+    "desktop:win": "npm run build && electron-builder --win nsis portable --publish never",
     "postinstall": "electron-builder install-app-deps"
   },
   "main": "electron/main.cjs",
