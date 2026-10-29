@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+TC:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: dark;
+  --standalone-bg: #06080a;
+  --standalone-text: #f2f8fa;
+  --bl-bg: #06080a;
+  --bl-surface: #0d1115;
+  --bl-surface-raised: #11171c;
+  --bl-line: #1d2a31;
+  --bl-line-strong: #33434d;
+  --bl-ink: #f2f8fa;
+  --bl-ink-soft: #c8d8dd;
+  --bl-muted: #70828b;
+  --bl-muted-strong: #9cb0b7;
+  --bl-cyan: #58dbf4;
+  --bl-orange: #ff9a57;
+  --bl-green: #6ddc9f;
+  --bl-pink: #ff5eb5;
+  --bl-purple: #a77bff;
+  --bl-yellow: #f6e85b;
+  --bl-prism: linear-gradient(90deg, #ff5eb5 0%, #a77bff 22%, #66d8ff 45%, #6ddc9f 68%, #f6e85b 84%, #ff9a57 100%);
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--standalone-bg);
+  color: var(--standalone-text);
+  font-family: "IBM Plex Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background-image: linear-gradient(rgba(88, 219, 244, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(88, 219, 244, .025) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+h1, h2, h3, strong, button, .kicker, .eyebrow {
+  font-family: "Chakra Petch", "IBM Plex Sans TC", "PingFang TC", sans-serif;
+}
+
+button, input, select { font-family: inherit; }
+
+.standalone-main {
+  width: min(100%, 1680px);
+  margin: 0 auto;
+  padding: 26px 28px 48px;
+}
+
+@media (max-width: 700px) {
+  .standalone-main { padding: 12px 10px 28px; }
+}
