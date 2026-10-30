@@ -10,9 +10,9 @@ import styles from "./workspace-shell.module.css";
 type Workspace = "automation" | "modules" | "screenshots";
 
 const workspaces: Array<{ id: Workspace; label: string; description: string; icon: typeof Bot }> = [
-  { id: "automation", label: "自動化控制台", description: "任務與 Windows 執行狀態", icon: Bot },
+  { id: "screenshots", label: "擷取角色資訊", description: "第一步：先截取角色畫面", icon: Camera },
   { id: "modules", label: "模組分析室", description: "五件模組組合與背包管理", icon: Calculator },
-  { id: "screenshots", label: "截圖機器人", description: "台港澳角色畫面與文字辨識", icon: Camera },
+  { id: "automation", label: "自動化控制台", description: "任務與 Windows 執行狀態", icon: Bot },
 ];
 
 const telemetry = [
@@ -22,7 +22,7 @@ const telemetry = [
 ];
 
 export function WorkspaceShell() {
-  const [workspace, setWorkspace] = useState<Workspace>("automation");
+  const [workspace, setWorkspace] = useState<Workspace>("screenshots");
   const [captureRequest, setCaptureRequest] = useState(0);
   useEffect(() => {
     const capture = () => { setWorkspace("screenshots"); setCaptureRequest(value => value + 1); };
@@ -36,7 +36,7 @@ export function WorkspaceShell() {
       <div className={styles.brandBlock}><strong>DarkLord Bot</strong><small>黑帝遊戲機器人</small></div>
       <div className={styles.railRule}/>
       <nav className={styles.railNav} aria-label="工具工作區">
-        {workspaces.map(item => { const Icon = item.icon; return <button key={item.id} title={item.label} type="button" className={`${styles.railButton} ${workspace === item.id ? styles.active : ""}`} aria-label={item.label} aria-current={workspace === item.id ? "page" : undefined} onClick={() => { if (item.id !== "screenshots") setCaptureRequest(0); setWorkspace(item.id); }}><span className={styles.railIcon}><Icon size={17}/></span>{workspace === item.id && <span className={styles.railDot}/>}</button>; })}
+        {workspaces.map(item => { const Icon = item.icon; return <button key={item.id} title={item.description} type="button" className={`${styles.railButton} ${workspace === item.id ? styles.active : ""}`} aria-label={item.label} aria-current={workspace === item.id ? "page" : undefined} onClick={() => { if (item.id !== "screenshots") setCaptureRequest(0); setWorkspace(item.id); }}><span className={styles.railIcon}><Icon size={17}/></span><span className={styles.railLabel}>{item.label}{item.id === "screenshots" && <small>第一步・從這裡開始</small>}</span>{workspace === item.id && <span className={styles.railDot}/>}</button>; })}
       </nav>
       <div className={styles.railFooter}><span className={styles.footerIcon}><ShieldCheck size={15}/></span></div>
     </aside>
@@ -47,10 +47,10 @@ export function WorkspaceShell() {
         <div className={styles.topbarActions}><span className={styles.runtime}><CircleCheck size={13}/>本機頁面已載入</span><button className={styles.iconButton} type="button" aria-label="開啟本機執行器資訊"><Terminal size={15}/></button></div>
       </header>
       <div className={styles.commandStrip}>
-        <div className={styles.commandTitle}><span className={styles.signal}><Radio size={14}/></span><div><span className={styles.kicker}>目前工作區 ／ 0{workspace === "automation" ? 1 : workspace === "modules" ? 2 : 3}</span><h1>{current.label}</h1></div></div>
-        <div className={styles.commandStats}><span><Cpu size={13}/>處理器 <b>本機</b></span><span><Camera size={13}/>畫面 <b>事件觸發</b></span><span><Zap size={13}/>模式 <b>預覽</b></span></div>
+        <div className={styles.commandTitle}><span className={styles.signal}><Radio size={14}/></span><div><span className={styles.kicker}>{workspace === "screenshots" ? "開始使用 ／ 先準備角色截圖" : `目前工作區 ／ 0${workspace === "modules" ? 2 : 3}`}</span><h1>{current.label}</h1></div></div>
+        {workspace !== "screenshots" && <div className={styles.commandStats}><span><Cpu size={13}/>處理器 <b>本機</b></span><span><Camera size={13}/>畫面 <b>事件觸發</b></span><span><Zap size={13}/>模式 <b>預覽</b></span></div>}
       </div>
-      <StatusDock />
+      {workspace !== "screenshots" && <StatusDock />}
       <main className={styles.workspace}>
         {workspace === "automation" && <AutomationConsole/>}
         {workspace === "modules" && <ModuleCalculator storageKey="blacklord-standalone-module-inventory-v1"/>}

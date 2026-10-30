@@ -29,6 +29,10 @@ try {
   const page = await context.newPage();
   observePageErrors(page);
   await page.goto(baseUrl);
+  await expect(page.getByRole("heading", { name: "擷取角色資訊", level: 1, exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "工具工作區" }).getByRole("button").first()).toHaveAccessibleName("擷取角色資訊");
+  await expect(page.getByRole("heading", { name: "第一步：擷取角色截圖", exact: true })).toBeVisible();
+  checks.push("the first screen and first navigation item explain character capture before any interaction");
   const loadedFonts = await page.evaluate(async () => {
     const results = [];
     for (const [family, sample] of [['IBM Plex Sans TC', '黑帝繁體中文'], ['Chakra Petch', 'DarkLord Bot']]) {
@@ -43,9 +47,10 @@ try {
   assert.deepEqual(externalRequests, [], 'The local UI must not request fonts or other startup assets from external services');
   checks.push('Chinese and Latin fonts load in all four weights with external network requests blocked');
 
+  await page.getByRole("button", { name: "自動化控制台", exact: true }).click();
   await page.getByRole("button", { name: "即時觸發", exact: true }).click();
   await page.getByRole("button", { name: /擷取遊戲畫面.*送到截圖機器人/ }).click();
-  await expect(page.getByRole("heading", { name: "讀取遊戲畫面", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "第一步：擷取角色截圖", exact: true })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "擷取遊戲視窗" })).toBeVisible();
   await expect(page.getByRole("button", { name: "擷取遊戲視窗", exact: true })).toBeEnabled();
   checks.push("automation capture request opens the screenshot workspace and preserves the browser capture prompt");
@@ -108,8 +113,8 @@ try {
   await expect(page.getByRole("button", { name: "查看示範快照", exact: true })).toBeEnabled();
   await expect(page.getByTestId("module-inventory-count")).toHaveText("0");
   checks.push("a fresh personal inventory starts empty");
-  await page.getByRole("button", { name: "截圖機器人", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "讀取遊戲畫面", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "擷取角色資訊", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "第一步：擷取角色截圖", exact: true })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "擷取遊戲視窗" })).toHaveCount(0);
   checks.push("returning to the screenshot workspace does not replay a consumed capture request");
   await context.close();
@@ -172,12 +177,12 @@ async function testLateDesktopOcr() {
   const page = await context.newPage();
   observePageErrors(page);
   await page.goto(baseUrl);
-  await page.getByRole("button", { name: "截圖機器人", exact: true }).click();
+  await page.getByRole("button", { name: "擷取角色資訊", exact: true }).click();
   await upload(page, "old-pending-frame.png");
   await page.getByRole("button", { name: "辨識圖片文字", exact: true }).click();
   await page.waitForFunction(() => typeof window.__completeDelayedOcr === "function");
   await page.getByRole("button", { name: "模組分析室", exact: true }).click();
-  await page.getByRole("button", { name: "截圖機器人", exact: true }).click();
+  await page.getByRole("button", { name: "擷取角色資訊", exact: true }).click();
   await upload(page, "replacement-frame.png");
   await page.getByLabel("辨識文字（請對照原圖修正）").fill("角色名稱：新圖角色\nUID：000222\n攻速專注 +9");
   await page.getByRole("button", { name: "確認並儲存角色資訊", exact: true }).click();

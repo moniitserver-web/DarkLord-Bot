@@ -13,8 +13,10 @@
 .brandBlock strong { color: var(--bl-ink); font-size: 15px; letter-spacing: .2px; white-space: nowrap; }
 .brandBlock small { color: var(--bl-muted); font-size: 8px; letter-spacing: .3px; white-space: nowrap; }
 .railRule { width: 30px; height: 1px; margin: 19px 0 16px; background: var(--bl-line-strong); }
-.railNav { display: grid; gap: 8px; }
-.railButton { position: relative; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid transparent; background: transparent; color: var(--bl-muted); cursor: pointer; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+.railNav { display: grid; gap: 8px; width: 100%; }
+.railButton { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 52px; padding: 11px 8px; border: 1px solid transparent; background: transparent; color: var(--bl-muted-strong); text-align: left; cursor: pointer; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+.railLabel { display: grid; gap: 5px; font-size: 11px; line-height: 1.5; }
+.railLabel small { font-size: 9px; color: var(--bl-cyan); }
 .railButton:hover { border-color: var(--bl-line-strong); background: #10171c; color: var(--bl-ink); }
 .railButton.active { border-image: var(--bl-prism) 1; background: #171426; color: var(--bl-ink); }
 .railIcon { display: grid; place-items: center; }
@@ -66,12 +68,14 @@
 @media (max-width: 1050px) { .statusDock { grid-template-columns: 1fr 1.5fr; } .statusEvents { display: none; } }
 @media (max-width: 720px) {
   .shell { display: block; min-height: 0; }
-  .rail { flex-direction: row; align-items: center; justify-content: space-between; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--bl-line); }
+  .rail { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--bl-line); }
   .brandBlock { width: auto; padding: 0; gap: 2px; }
   .brandBlock strong { font-size: 13px; }
   .railRule, .railFooter { display: none; }
-  .railNav { display: flex; gap: 5px; margin: 0 0 0 auto; }
-  .railButton { width: 34px; height: 34px; }
+  .railNav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 12px 0 0; }
+  .railButton { min-height: 54px; padding: 8px 5px; gap: 5px; justify-content: center; }
+  .railLabel { font-size: 10px; }
+  .railLabel small { font-size: 8px; }
   .railDot { top: 4px; right: 4px; }
   .topbar { min-height: 48px; padding: 0 13px; }
   .breadcrumb { font-size: 8px; }

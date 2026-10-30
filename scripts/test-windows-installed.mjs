@@ -157,7 +157,10 @@ async function runApplication(runNumber) {
     }));
 
     if (!title.includes("黑帝") && !title.includes("DarkLord")) throw new Error(`Unexpected page title: ${title}`);
-    if (!heading.trim()) throw new Error("The main UI heading is empty.");
+    if (heading !== "擷取角色資訊") throw new Error(`The installed app must start with character capture, got: ${heading}`);
+    const firstWorkspace = page.getByRole("navigation", { name: "工具工作區" }).getByRole("button").first();
+    if (await firstWorkspace.getAttribute("aria-label") !== "擷取角色資訊") throw new Error("Character capture must be the first navigation item.");
+    await page.getByRole("heading", { name: "第一步：擷取角色截圖", exact: true }).waitFor();
     if (!brandVisible) throw new Error("The DarkLord Bot brand is not visible.");
     if (resources.css.length === 0 || resources.stylesheets === 0) throw new Error("No stylesheet was loaded by the installed app.");
     if (resources.js.length === 0) throw new Error("No JavaScript bundle was loaded by the installed app.");
@@ -174,9 +177,10 @@ async function runApplication(runNumber) {
     if (runNumber === 1) {
       // Exercise the installed preload/IPC and the real Windows OCR engine,
       // including the previously lost capture event on the automation page.
+      await page.getByRole("button", { name: "自動化控制台", exact: true }).click();
       await page.getByRole("button", { name: "即時觸發", exact: true }).click();
       await page.getByRole("button", { name: /擷取遊戲畫面/ }).first().click();
-      await page.getByRole("heading", { name: "讀取遊戲畫面" }).waitFor();
+      await page.getByRole("heading", { name: "第一步：擷取角色截圖", exact: true }).waitFor();
       const capture = await page.evaluate(async () => {
         const sources = await window.darklordDesktop.listCaptureSources();
         const source = sources.find(item => item.id.startsWith("screen:"));

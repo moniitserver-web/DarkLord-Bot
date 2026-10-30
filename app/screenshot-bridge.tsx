@@ -165,14 +165,14 @@ export function ScreenshotBridge({ captureRequest = 0 }: { captureRequest?: numb
   }
 
   return <section className={styles.bridge} aria-labelledby="screenshot-bridge-title">
-    <div className={styles.heading}><div><p className={styles.eyebrow}>台港澳服 · 截圖辨識</p><h2 id="screenshot-bridge-title">讀取遊戲畫面</h2><p>開啟角色資訊或物品詳情，擷取可見文字，再核對辨識結果。截圖只能讀到畫面上的內容，無法登入帳號或取得未顯示的完整背包。</p></div><Camera size={25}/></div>
-    <ol className={styles.steps}><li><b>一</b><span>選擇遊戲畫面</span></li><li><b>二</b><span>辨識繁中文字</span></li><li><b>三</b><span>核對並確認資料</span></li></ol>
+    <div className={styles.heading}><div><p className={styles.eyebrow}>台港澳服 · 開始使用</p><h2 id="screenshot-bridge-title">第一步：擷取角色截圖</h2><p>請先在遊戲中開啟「角色資訊」頁，讓角色名稱、UID 與等級完整顯示，再按下方「擷取遊戲視窗」。已有截圖也可以直接選擇圖片。</p></div><Camera size={25}/></div>
+    <ol className={styles.steps}><li><b>一</b><span>開啟角色頁並截圖</span></li><li><b>二</b><span>辨識圖片文字</span></li><li><b>三</b><span>核對並儲存角色</span></li></ol>
     <div className={styles.grid}>
       <div className={styles.sourcePanel}>
-        <p className={styles.helper}>請讓遊戲視窗保持可見。建議先截取角色資訊頁；模組代碼只有在畫面明確顯示時才會讀取。</p>
+        <p className={styles.helper}>先確認遊戲的角色資訊頁已開啟，並讓視窗保持可見。</p>
         <div className={styles.sourceButtons}>
+          <button type="button" className={styles.capturePrimary} onClick={captureScreen} disabled={capturing || recognizing}><MonitorUp size={15}/>{capturing ? "擷取中…" : "擷取遊戲視窗"}</button>
           <button type="button" onClick={() => uploadRef.current?.click()} disabled={capturing || recognizing}><Upload size={15}/>選擇截圖</button>
-          <button type="button" onClick={captureScreen} disabled={capturing || recognizing}><MonitorUp size={15}/>{capturing ? "擷取中…" : "擷取遊戲視窗"}</button>
           <button type="button" onClick={recognize} disabled={!file || !windowsOcr || recognizing || capturing}><ScanText size={15}/>{recognizing ? "辨識中…" : "辨識圖片文字"}</button>
         </div>
         {!windowsOcr && <p className={styles.helper}>{desktop ? "圖片文字辨識目前支援 Windows 版。" : "請在 Windows EXE 使用本機文字辨識；瀏覽器版可上傳截圖並手動貼入文字。"}</p>}
@@ -184,7 +184,7 @@ export function ScreenshotBridge({ captureRequest = 0 }: { captureRequest?: numb
         <label>遊戲頁面<input value={page} maxLength={120} onChange={event => setPage(event.target.value)}/></label>
         <label>辨識文字（請對照原圖修正）<textarea value={ocrText} disabled={recognizing} onChange={event => updateText(event.target.value)} placeholder={"角色名稱：你的角色\nUID：畫面顯示的數字\n等級：60\n\n詞條範例：攻速專注 +8"}/></label>
         <div className={styles.parsed}><span>{textSource === "windows-ocr" ? "Windows 圖片辨識" : "手動文字"}</span>{parsed.moduleCount !== undefined && <b>{parsed.moduleCount} 件模組</b>}{parsed.attributes.slice(0, 6).map((item, index) => <i key={index}>{item.name} +{item.value}</i>)}</div>
-        <p className={styles.helper}>物品種類代碼：{parsed.item.gameConfigId ?? "未讀取"} · 物品實例編號：{parsed.item.gameInstanceId ?? "未讀取"}。不會依物品名稱猜測代碼。</p>
+        <p className={styles.helper}>截圖只能讀取畫面上的內容，無法登入帳號或同步未顯示的背包。物品種類代碼：{parsed.item.gameConfigId ?? "未讀取"} · 物品實例編號：{parsed.item.gameInstanceId ?? "未讀取"}；不會依名稱猜測代碼。</p>
         {parsed.warnings.map((warning, index) => <p className={styles.helper} key={index}>{warning}</p>)}
         <div className={styles.actions}><button type="button" onClick={copyPayload}><Clipboard size={14}/>{copied ? "已複製" : "複製辨識資料"}</button><button type="button" className={styles.send} onClick={sendToBot} disabled={!file || sending || recognizing}><Send size={14}/>{sending ? "傳送中…" : "送出截圖與文字"}</button></div>
       </div>

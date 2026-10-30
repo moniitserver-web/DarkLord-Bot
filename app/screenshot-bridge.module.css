@@ -3,7 +3,7 @@
 .heading > svg { color: var(--bl-pink); flex-shrink: 0; }
 .eyebrow { color: var(--bl-orange); font-size: 8px; letter-spacing: 1.7px; margin: 0 0 5px; }
 .heading h2 { margin: 0; font-family: "Chakra Petch", "Segoe UI", sans-serif; font-size: 20px; font-weight: 600; }
-.heading p:last-child { margin: 7px 0 0; color: var(--bl-muted); font-size: 10px; line-height: 1.8; }
+.heading p:last-child { max-width: 780px; margin: 10px 0 0; color: var(--bl-ink-soft); font-size: 13px; line-height: 1.85; }
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 16px 0 0; padding: 0; border: 1px solid var(--bl-line); background: var(--bl-line); list-style: none; }
 .steps li { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 11px 12px; background: #0b1217; color: var(--bl-muted-strong); font-size: 10px; }
 .steps b { display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 auto; border: 1px solid var(--bl-purple); color: var(--bl-pink); font-size: 9px; font-weight: 600; }
@@ -15,6 +15,7 @@
 .bridge button:hover:not(:disabled) { border-color: var(--bl-cyan); color: var(--bl-cyan); }
 .bridge button:disabled { opacity: .45; cursor: not-allowed; }
 .sourceButtons button.active { border-image: var(--bl-prism) 1; background: #1a1422; color: var(--bl-ink); }
+.sourceButtons button.capturePrimary { border-color: var(--bl-cyan); background: #14313a; color: #d5f8ff; padding: 10px 14px; font-size: 13px; font-weight: 600; }
 .hiddenInput { position: absolute; width: 1px; height: 1px; opacity: 0; clip-path: inset(50%); }
 .dropzone { width: 100%; min-height: 250px; margin-top: 9px; flex-direction: column; border-style: dashed !important; color: var(--bl-cyan) !important; background: #0b1216 !important; }
 .dropzone span { color: var(--bl-ink-soft); font-size: 11px; }
