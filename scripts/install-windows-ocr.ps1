@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidateRange(60, 1800)]
-    [int]$DownloadTimeoutSeconds = 600
+    [int]$DownloadTimeoutSeconds = 1200
 )
 
 # Server 2025 source published by Microsoft:

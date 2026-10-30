@@ -20,7 +20,7 @@ Windows 建置需要在 Windows 建置機執行。最簡單的方式是把程式
 
 工作流程會將安裝版安裝到包含中文與空格的暫存路徑，實際開啟主視窗、檢查網頁與樣式資源，再關閉並重新開啟。也會透過安裝版的畫面擷取與 OCR 介面，辨識合成的繁中圖片、核對角色 UID。所有步驟通過後才上傳 EXE；診斷記錄保留在 `darklord-bot-windows-smoke-logs` 與 `darklord-bot-windows-ocr-logs`。合成圖片測試不能代表台港澳遊戲畫面的辨識率。
 
-CI 固定使用 Windows Server 2025。`scripts/install-windows-ocr.ps1` 會從微軟官方 Server 2025 Languages and Optional Features ISO 安裝繁中 Basic、OCR 與 Hant 字型，使用 `-LimitAccess` 避免等待 Windows Update。下載上限 600 秒、安裝步驟上限 30 分鐘；若缺少套件、要求重啟或辨識失敗，建置會失敗並保留診斷。此約 6.4 GiB 的媒體僅供 CI，不會包入 EXE，也不能將 Server 套件安裝到一般 Windows 10／11 電腦。
+CI 固定使用 Windows Server 2025。`scripts/install-windows-ocr.ps1` 會從微軟官方 Server 2025 Languages and Optional Features ISO 安裝繁中 Basic、OCR 與 Hant 字型，使用 `-LimitAccess` 避免等待 Windows Update。下載上限 1200 秒、安裝步驟上限 30 分鐘；若缺少套件、要求重啟或辨識失敗，建置會失敗並保留診斷。此約 6.4 GiB 的媒體僅供 CI，不會包入 EXE，也不能將 Server 套件安裝到一般 Windows 10／11 電腦。
 
 一般使用者請依 [截圖辨識說明](screenshot-bot.md)，在 Windows 語言設定加入「中文（繁體，台灣）」及基本輸入／光學字元辨識。缺少繁中引擎時會顯示設定指引，可先手動貼入文字。安裝 DarkLord Bot 本身不會替系統安裝語言包。
 
