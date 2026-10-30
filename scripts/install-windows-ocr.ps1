@@ -66,7 +66,10 @@ if ($missing.Count -eq 0) {
     return
 }
 
-$curl = Get-Command curl.exe -CommandType Application -ErrorAction Stop
+$curlPath = Join-Path $env:SystemRoot 'System32/curl.exe'
+if (-not (Test-Path -LiteralPath $curlPath -PathType Leaf)) {
+    throw 'The Windows system curl.exe is missing.'
+}
 $tempRoot = $env:RUNNER_TEMP
 if ([string]::IsNullOrWhiteSpace($tempRoot)) {
     $tempRoot = [IO.Path]::GetTempPath()
@@ -80,7 +83,7 @@ $mounted = $false
 try {
     Write-ProgressMessage ('Downloading official Server 2025 Languages and Optional Features ISO; timeout {0}s. The media is about 6.4 GiB.' -f $DownloadTimeoutSeconds)
     # No retries: max-time bounds the entire transfer, including redirects.
-    & $curl.Source --fail --location --silent --show-error --proto '=https' --proto-redir '=https' --connect-timeout 30 --max-time $DownloadTimeoutSeconds --output $isoPath $sourceUrl
+    & $curlPath --fail --location --silent --show-error --proto '=https' --proto-redir '=https' --connect-timeout 30 --max-time $DownloadTimeoutSeconds --output $isoPath $sourceUrl
     if ($LASTEXITCODE -ne 0) {
         throw "Official ISO download failed or timed out (curl exit $LASTEXITCODE)."
     }
