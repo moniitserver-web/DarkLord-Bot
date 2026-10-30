@@ -8,7 +8,11 @@ on:
 
 jobs:
   diagnose:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-11-arm]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 5
     permissions:
       contents: read
@@ -20,4 +24,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsBuildNumber
           Get-WindowsCapability -Online | Where-Object { $_.Name -like 'Language.*zh-TW*' -or $_.Name -like 'Language.Fonts.Hant*' } | Format-Table Name,State
-          & .\electron\windows-ocr.ps1 -Diagnostics
+          $source = [IO.File]::ReadAllText((Join-Path $PWD 'electron/windows-ocr.ps1'), [Text.Encoding]::UTF8)
+          $script = Join-Path $env:RUNNER_TEMP 'darklord-ocr-diagnostics.ps1'
+          [IO.File]::WriteAllText($script, $source, (New-Object Text.UTF8Encoding($true)))
+          & $script -Diagnostics
