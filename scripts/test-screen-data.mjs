@@ -12,6 +12,15 @@ const browser = await chromium.launch({ headless: true });
 
 try {
   const context = await browser.newContext();
+  const externalRequests = [];
+  await context.route('**/*', route => {
+    const url = new URL(route.request().url());
+    if (['http:', 'https:'].includes(url.protocol) && url.origin !== new URL(baseUrl).origin) {
+      externalRequests.push(url.href);
+      return route.abort();
+    }
+    return route.continue();
+  });
   const statusResponse = await context.request.get(new URL("/api/bot/screenshot", baseUrl).href);
   assert.equal(statusResponse.status(), 200, "Screenshot route must be available before testing");
   const status = await statusResponse.json();
@@ -20,6 +29,19 @@ try {
   const page = await context.newPage();
   observePageErrors(page);
   await page.goto(baseUrl);
+  const loadedFonts = await page.evaluate(async () => {
+    const results = [];
+    for (const [family, sample] of [['IBM Plex Sans TC', '黑帝繁體中文'], ['Chakra Petch', 'DarkLord Bot']]) {
+      for (const weight of [400, 500, 600, 700]) {
+        const faces = await document.fonts.load(`${weight} 16px "${family}"`, sample);
+        results.push({ family, weight, loaded: faces.length > 0 && faces.every(face => face.status === 'loaded') });
+      }
+    }
+    return results;
+  });
+  assert.ok(loadedFonts.every(font => font.loaded), `Bundled fonts did not load: ${JSON.stringify(loadedFonts)}`);
+  assert.deepEqual(externalRequests, [], 'The local UI must not request fonts or other startup assets from external services');
+  checks.push('Chinese and Latin fonts load in all four weights with external network requests blocked');
 
   await page.getByRole("button", { name: "即時觸發", exact: true }).click();
   await page.getByRole("button", { name: /擷取遊戲畫面.*送到截圖機器人/ }).click();
