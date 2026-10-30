@@ -1,0 +1,23 @@
+name: Windows OCR 環境診斷
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fix-tw-screen-data]
+    paths: [.github/workflows/diagnose-windows-ocr.yml]
+
+jobs:
+  diagnose:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: 列出 OCR 與語言元件狀態
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsBuildNumber
+          Get-WindowsCapability -Online | Where-Object { $_.Name -like 'Language.*zh-TW*' -or $_.Name -like 'Language.Fonts.Hant*' } | Format-Table Name,State
+          & .\electron\windows-ocr.ps1 -Diagnostics
