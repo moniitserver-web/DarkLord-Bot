@@ -36,7 +36,7 @@ export function WorkspaceShell() {
       <div className={styles.brandBlock}><strong>DarkLord Bot</strong><small>黑帝遊戲機器人</small></div>
       <div className={styles.railRule}/>
       <nav className={styles.railNav} aria-label="工具工作區">
-        {workspaces.map(item => { const Icon = item.icon; return <button key={item.id} title={item.label} type="button" className={`${styles.railButton} ${workspace === item.id ? styles.active : ""}`} aria-label={item.label} aria-current={workspace === item.id ? "page" : undefined} onClick={() => setWorkspace(item.id)}><span className={styles.railIcon}><Icon size={17}/></span>{workspace === item.id && <span className={styles.railDot}/>}</button>; })}
+        {workspaces.map(item => { const Icon = item.icon; return <button key={item.id} title={item.label} type="button" className={`${styles.railButton} ${workspace === item.id ? styles.active : ""}`} aria-label={item.label} aria-current={workspace === item.id ? "page" : undefined} onClick={() => { if (item.id !== "screenshots") setCaptureRequest(0); setWorkspace(item.id); }}><span className={styles.railIcon}><Icon size={17}/></span>{workspace === item.id && <span className={styles.railDot}/>}</button>; })}
       </nav>
       <div className={styles.railFooter}><span className={styles.footerIcon}><ShieldCheck size={15}/></span></div>
     </aside>

@@ -92,6 +92,7 @@ export function validateInventory(value: unknown): ModuleItem[] {
     throw new Error(`最多可匯入 ${MAX_INVENTORY_SIZE} 個模組。`);
   }
   const ids = new Set<string>();
+  const instanceRegions = new Map<string, Set<GameRegion>>();
   const allStats = new Set<string>();
   return value.map((raw, index) => {
     const label = `第 ${index + 1} 個模組`;
@@ -126,6 +127,18 @@ export function validateInventory(value: unknown): ModuleItem[] {
     if (Object.hasOwn(item, "region")) {
       if (!GAME_REGIONS.includes(item.region as GameRegion)) throw new Error(`${label}的 region 必須是 tw-hk-mo、cn、global 或 unknown。`);
       result.region = item.region as GameRegion;
+    }
+    if (result.gameInstanceId !== undefined) {
+      const region = result.region ?? "unknown";
+      const seenRegions = instanceRegions.get(result.gameInstanceId) ?? new Set<GameRegion>();
+      if (seenRegions.size && (region === "unknown" || seenRegions.has("unknown"))) {
+        throw new Error(`${label}的遊戲實例識別碼「${result.gameInstanceId}」重複，且至少一筆區服未指定；請先核對區服與是否為同一件模組。`);
+      }
+      if (seenRegions.has(region)) {
+        throw new Error(`${label}的遊戲實例識別碼「${result.gameInstanceId}」在${GAME_REGION_LABELS[region]}重複；同一件模組不能重複加入背包。`);
+      }
+      seenRegions.add(region);
+      instanceRegions.set(result.gameInstanceId, seenRegions);
     }
     return result;
   });

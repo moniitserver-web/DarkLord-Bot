@@ -188,7 +188,10 @@ async function runApplication(runNumber) {
       const fixture = resolve(process.env.OCR_LOG_DIR || "ocr-logs", "fixture.png");
       await page.locator('input[type="file"]').setInputFiles(fixture);
       await page.getByRole("button", { name: "辨識圖片文字", exact: true }).click();
-      await page.waitForFunction(() => document.querySelector('textarea')?.value.includes('12345678'), null, { timeout: 60_000 });
+      await page.waitForFunction(() => document.querySelector('textarea')?.value.replace(/\s+/g, '').includes('12345678'), null, { timeout: 60_000 }).catch(async error => {
+        const details = await page.getByRole('alert').allTextContents();
+        throw new Error(`Installed OCR did not produce the fixture UID: ${details.join('; ') || error.message}`);
+      });
       const recognized = await page.locator('textarea').inputValue();
       if (!/角色|測試/.test(recognized.replace(/\s/g, ''))) throw new Error("Installed OCR did not return Chinese text");
       await page.locator('textarea').fill('角色名稱：測試角色\nUID：001234567890123456789\n等級：60\n模組數量：929\n攻速專注 +8');

@@ -8,8 +8,8 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
-    timeout-minutes: 30
+    runs-on: windows-2025
+    timeout-minutes: 45
     permissions:
       contents: read
 
@@ -33,14 +33,9 @@ jobs:
         run: npm run test:desktop
 
       - name: 安裝繁體中文 OCR 與測試字型
+        timeout-minutes: 30
         shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          foreach ($pattern in @('Language.Basic~~~zh-TW~*', 'Language.OCR~~~zh-TW~*', 'Language.Fonts.Hant~~~*')) {
-            $capability = Get-WindowsCapability -Online | Where-Object Name -like $pattern | Select-Object -First 1
-            if (-not $capability) { throw "Windows does not provide capability $pattern" }
-            if ($capability.State -ne 'Installed') { Add-WindowsCapability -Online -Name $capability.Name }
-          }
+        run: .\scripts\install-windows-ocr.ps1
 
       - name: Windows 繁體中文圖片辨識測試
         run: node scripts/test-windows-ocr.mjs
@@ -72,6 +67,14 @@ jobs:
         with:
           name: darklord-bot-windows-ocr-logs
           path: ocr-logs
+          if-no-files-found: warn
+
+      - name: 上傳 Windows 元件安裝記錄
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: darklord-bot-windows-capability-logs
+          path: C:/Windows/Logs/DISM/dism.log
           if-no-files-found: warn
 
       - name: 上傳 EXE

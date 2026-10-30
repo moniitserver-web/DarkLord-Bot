@@ -86,6 +86,10 @@ try {
   await expect(page.getByRole("button", { name: "查看示範快照", exact: true })).toBeEnabled();
   await expect(page.getByTestId("module-inventory-count")).toHaveText("0");
   checks.push("a fresh personal inventory starts empty");
+  await page.getByRole("button", { name: "截圖機器人", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "讀取遊戲畫面", exact: true })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "擷取遊戲視窗" })).toHaveCount(0);
+  checks.push("returning to the screenshot workspace does not replay a consumed capture request");
   await context.close();
 
   await testLateDesktopOcr();
