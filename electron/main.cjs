@@ -1,10 +1,11 @@
-const { app, BrowserWindow, dialog } = require("electron");
+const { app, BrowserWindow, dialog, desktopCapturer, screen, nativeImage, ipcMain } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const http = require("node:http");
 const net = require("node:net");
 const path = require("node:path");
 const { createStartupLogger, observeServerProcess } = require("./startup-logging.cjs");
+const { createDesktopCaptureService, assertTrustedCaptureCaller } = require("./desktop-capture.cjs");
 
 const HOST = "127.0.0.1";
 const DEV_PORT = 3001;
@@ -13,6 +14,19 @@ let serverProcess = null;
 let mainWindow = null;
 let startupLogger = null;
 let serverObserver = null;
+let captureOrigin = null;
+
+const captureService = createDesktopCaptureService({ desktopCapturer, screen, nativeImage });
+for (const [channel, method] of [
+  ["darklord:list-capture-sources", "listCaptureSources"],
+  ["darklord:capture-source", "captureSource"],
+  ["darklord:recognize-image", "recognizeImage"],
+]) {
+  ipcMain.handle(channel, (event, value) => {
+    assertTrustedCaptureCaller(event, mainWindow, captureOrigin);
+    return captureService[method](value);
+  });
+}
 
 function wait(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -102,6 +116,7 @@ function stopNextServer() {
 }
 
 async function createWindow(url) {
+  captureOrigin = new URL(url).origin;
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 960,

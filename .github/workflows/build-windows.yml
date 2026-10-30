@@ -9,7 +9,7 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
 
@@ -32,6 +32,21 @@ jobs:
       - name: 桌面啟動測試
         run: npm run test:desktop
 
+      - name: 安裝繁體中文 OCR 與測試字型
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($pattern in @('Language.Basic~~~zh-TW~*', 'Language.OCR~~~zh-TW~*', 'Language.Fonts.Hant~~~*')) {
+            $capability = Get-WindowsCapability -Online | Where-Object Name -like $pattern | Select-Object -First 1
+            if (-not $capability) { throw "Windows does not provide capability $pattern" }
+            if ($capability.State -ne 'Installed') { Add-WindowsCapability -Online -Name $capability.Name }
+          }
+
+      - name: Windows 繁體中文圖片辨識測試
+        run: node scripts/test-windows-ocr.mjs
+        env:
+          OCR_LOG_DIR: ocr-logs
+
       - name: 建置 Windows 安裝檔與免安裝檔
         run: npm run desktop:win
 
@@ -41,6 +56,7 @@ jobs:
         run: node scripts/test-windows-installed.mjs
         env:
           SMOKE_LOG_DIR: smoke-logs
+          OCR_LOG_DIR: ocr-logs
 
       - name: 上傳煙霧測試診斷資料
         if: always()
@@ -48,6 +64,14 @@ jobs:
         with:
           name: darklord-bot-windows-smoke-logs
           path: smoke-logs
+          if-no-files-found: warn
+
+      - name: 上傳 OCR 診斷資料
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: darklord-bot-windows-ocr-logs
+          path: ocr-logs
           if-no-files-found: warn
 
       - name: 上傳 EXE

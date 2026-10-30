@@ -171,6 +171,35 @@ async function runApplication(runNumber) {
     if (failedRequests.length > 0) throw new Error(`Installed app reported failed resources: ${JSON.stringify(failedRequests)}`);
     if (!responses.some(response => response.status === 200 && response.type === "document")) throw new Error("The installed UI document did not return HTTP 200.");
 
+    if (runNumber === 1) {
+      // Exercise the installed preload/IPC and the real Windows OCR engine,
+      // including the previously lost capture event on the automation page.
+      await page.getByRole("button", { name: "即時觸發", exact: true }).click();
+      await page.getByRole("button", { name: /擷取遊戲畫面/ }).first().click();
+      await page.getByRole("heading", { name: "讀取遊戲畫面" }).waitFor();
+      const capture = await page.evaluate(async () => {
+        const sources = await window.darklordDesktop.listCaptureSources();
+        const source = sources.find(item => item.id.startsWith("screen:"));
+        if (!source) throw new Error("No desktop source available on Windows runner");
+        const result = await window.darklordDesktop.captureSource(source.id);
+        return { sourceCount: sources.length, png: result.dataUrl.startsWith("data:image/png;base64,"), bytes: result.dataUrl.length };
+      });
+      if (!capture.png || capture.bytes < 100) throw new Error("Installed desktop capture did not return an image");
+      const fixture = resolve(process.env.OCR_LOG_DIR || "ocr-logs", "fixture.png");
+      await page.locator('input[type="file"]').setInputFiles(fixture);
+      await page.getByRole("button", { name: "辨識圖片文字", exact: true }).click();
+      await page.waitForFunction(() => document.querySelector('textarea')?.value.includes('12345678'), null, { timeout: 60_000 });
+      const recognized = await page.locator('textarea').inputValue();
+      if (!/角色|測試/.test(recognized.replace(/\s/g, ''))) throw new Error("Installed OCR did not return Chinese text");
+      await page.locator('textarea').fill('角色名稱：測試角色\nUID：001234567890123456789\n等級：60\n模組數量：929\n攻速專注 +8');
+      if (await page.getByLabel("確認角色 UID", { exact: true }).inputValue() !== '001234567890123456789') throw new Error("Character UID precision was lost");
+      await page.getByRole("button", { name: "確認並儲存角色資訊" }).click();
+      await page.getByText(/上次確認：測試角色/).waitFor();
+      await page.screenshot({ path: join(runLogDir, "ocr-window.png"), fullPage: true });
+      await page.getByRole("button", { name: "模組分析室", exact: true }).click();
+      if (await page.getByTestId("module-inventory-count").innerText() !== '0') throw new Error("Public snapshot was mistaken for the personal inventory");
+      report.captureAndOcr = { ...capture, recognized, confirmedUid: '001234567890123456789' };
+    }
     await page.screenshot({ path: join(runLogDir, "window.png"), fullPage: true });
     await writeFile(join(runLogDir, "result.json"), JSON.stringify({ runNumber, title, heading, brandVisible, runtime, resources, assets, responses }, null, 2), "utf8");
     report.runs.push({ runNumber, title, heading, url: resources.url, cssCount: resources.css.length, jsCount: resources.js.length });

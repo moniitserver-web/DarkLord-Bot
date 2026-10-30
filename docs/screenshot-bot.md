@@ -1,59 +1,21 @@
-# 遊戲截圖 Bot 串接
+# 台港澳截圖與角色資料
 
-獨立工具把每次遊戲畫面視為一個 `game_screen` 事件。使用者可以上傳截圖，或在瀏覽器授權後選取遊戲視窗並擷取單張畫面。事件會送到 `/api/bot/screenshot`；設定 `BOT_WEBHOOK_URL` 後，伺服器再把事件與圖片 base64 轉送到 bot。
+Windows 版新增本機繁體中文 OCR。此功能讀取圖片上的文字，不登入遊戲，不提供 UID 查詢帳號，也不會取得畫面以外的背包。
 
-## 啟用 webhook
+1. 在遊戲開啟角色資訊或物品詳情，保持視窗可見。
+2. 在「截圖機器人」按「擷取遊戲視窗」，選遊戲視窗或所在螢幕。也可上傳 PNG/JPEG（最多 8 MB）。
+3. 按「辨識圖片文字」。第一次使用需 Windows 已安裝繁體中文 OCR；缺少時會顯示語言設定指引，不會用英文辨識假裝成功。
+4. 對照原圖修正文字與角色欄位，按「確認並儲存角色資訊」。記錄只存本機，不代表遊戲登入狀態。
+5. 若需外部 Bot，按「送出截圖與文字」。未設定 BOT_WEBHOOK_URL 時僅由本機接收，不會向外轉送。
 
-在專案根目錄建立 `.env.local`：
+圖片辨識使用 Windows.Media.Ocr。原圖暫存在系統暫存目錄，辨識成功或失敗後刪除；不會自動上傳圖片。一般瀏覽器及 macOS 版仍可上傳圖片並手動貼入文字，不提供此 Windows OCR 功能。
 
-```sh
-BOT_WEBHOOK_URL=https://your-bot.example.com/game-screen
-```
+解析只採用明確標籤，例如「角色名稱」「UID」「等級」「伺服器」「物品代碼」「物品實例ID」。沒有標籤的文字不會猜測。對比不足、介面縮放、特殊字型或遮擋會影響結果，尚須實際台港澳遊戲截圖驗證辨識率。
 
-重新啟動 `npm run dev` 後，面板的「傳給 Bot」會把截圖送到該網址。未設定時仍會接收並解析截圖，但回應會標示尚未轉送。
+UID、遊戲物品種類代碼、物品實例 ID 均作字串保存，保留前導零及長數字。未讀到代碼時顯示未讀取，不從物品名稱推測。
 
-## 事件內容
+`POST /api/bot/screenshot` 接受 multipart：`image`、`source`、`page`、`capturedAt`、`ocrText`、`textSource`，可選 `confirmedCharacter` JSON。桌面 OCR 在送出前執行，API 本身不對圖片執行 OCR。Windows 執行器若只送圖，回覆會明確標示 `recognition: "not-run"`。
 
-Webhook 會收到 JSON：
+轉送事件包含 `region: "tw-hk-mo"`、OCR 原文與 `parsed` 草稿。使用者當次核對並儲存的修正值另放在 `confirmedCharacter`，不覆寫 OCR 原始結果。修改圖片、文字或角色欄位後須再次確認，避免傳送上一張圖的確認值。
 
-```json
-{
-  "event": "game_screen",
-  "capturedAt": "2026-10-28T12:00:00.000Z",
-  "source": "screen",
-  "page": "模組背包",
-  "ocrText": "模組數量：929\n特攻傷害 +12",
-  "parsed": {
-    "moduleCount": 929,
-    "attributes": [{ "name": "特攻傷害", "value": 12 }]
-  },
-  "image": {
-    "mimeType": "image/png",
-    "size": 123456,
-    "base64": "..."
-  }
-}
-```
-
-頁面切換時要再次擷取並送出一張畫面，bot 端可用 `capturedAt` 與 `page` 去重或建立遊戲狀態。OCR 服務可以在 bot 端處理；前端的文字框只提供手動貼入與本地快速解析。
-
-## macOS 自動監看
-
-如果遊戲與獨立工具在同一台 Mac，可以用 `screencapture` 輪詢畫面。腳本會以 SHA-256 比對前一張畫面，只有畫面真的變更時才送出一次：
-
-```sh
-cd /Users/bomen/Documents/ChatGPT/StarBox-module-calculator
-STARBOX_URL=http://127.0.0.1:3001 \
-SCREENSHOT_INTERVAL_MS=1500 \
-SCREENSHOT_OUTPUT_DIR=.screenshots \
-GAME_PAGE="遊戲畫面" \
-node scripts/game-screenshot-bot.mjs
-```
-
-若只要測試一張畫面，可加 `--once`。指定單一遊戲視窗時設定 `SCREENSHOT_WINDOW_ID`：
-
-```sh
-SCREENSHOT_WINDOW_ID=12345 node scripts/game-screenshot-bot.mjs
-```
-
-第一次使用需要在「系統設定 → 隱私權與安全性 → 螢幕錄製」允許 Terminal 或 Node 擷取畫面。腳本不會把相同畫面重複送給 bot；不同畫面會保留在 `SCREENSHOT_OUTPUT_DIR` 供除錯。
+目前每次擷取由使用者觸發，未實作自動辨識過圖。自動化控制台的即時擷取會開啟截圖頁與來源選擇器；任務中的舊 OCR 勾選框尚不會呼叫桌面 OCR，不能視為背景自動讀取已完成。

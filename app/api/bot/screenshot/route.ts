@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SCREENSHOT_MAX_BYTES, parseScreenshotText } from "@/lib/screenshot-bridge";
+import { SCREENSHOT_MAX_BYTES, parseScreenshotText, validateConfirmedCharacter } from "@/lib/screenshot-bridge";
 
 export const runtime = "nodejs";
 
@@ -16,7 +16,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const form = await request.formData();
+  let form: FormData;
+  try { form = await request.formData(); }
+  catch { return jsonError("截圖資料格式不正確，請重新選擇圖片再送出。", 400); }
   const image = form.get("image");
   if (!(image instanceof Blob)) return jsonError("請提供遊戲畫面截圖。", 422);
   if (!image.type.startsWith("image/")) return jsonError("只接受圖片格式的截圖。", 415);
@@ -25,8 +27,14 @@ export async function POST(request: Request) {
   const source = form.get("source") === "screen" ? "screen" : "upload";
   const page = String(form.get("page") ?? "未命名畫面").trim().slice(0, 120) || "未命名畫面";
   const ocrText = String(form.get("ocrText") ?? "").slice(0, 20_000);
+  const textSource = form.get("textSource") === "windows-ocr" ? "windows-ocr" : "manual";
   const capturedAt = String(form.get("capturedAt") ?? new Date().toISOString());
   const parsed = parseScreenshotText(ocrText);
+  let confirmedCharacter;
+  try {
+    const confirmed = form.get("confirmedCharacter");
+    if (confirmed) confirmedCharacter = validateConfirmedCharacter(JSON.parse(String(confirmed)));
+  } catch { return jsonError("確認角色資料格式不正確，請重新核對角色資料。", 422); }
   const webhook = process.env.BOT_WEBHOOK_URL?.trim();
   let forwarded = false;
 
@@ -40,11 +48,14 @@ export async function POST(request: Request) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           event: "game_screen",
+          region: "tw-hk-mo",
+          textSource,
           capturedAt,
           source,
           page,
           ocrText,
           parsed,
+          confirmedCharacter,
           image: { mimeType: image.type, size: image.size, base64: imageBase64 },
         }),
         signal: controller.signal,
@@ -69,7 +80,11 @@ export async function POST(request: Request) {
       mimeType: image.type,
       size: image.size,
       parsed,
+      region: "tw-hk-mo",
+      confirmedCharacter,
+      textSource,
+      recognition: ocrText.trim() ? "text-provided" : "not-run",
     },
-    message: forwarded ? "截圖已送到機器人服務。" : "截圖已接收；尚未設定轉送網址，因此還沒有送到機器人服務。",
+    message: (forwarded ? "截圖與文字已轉送；這不代表遊戲帳號已同步。" : "本機已收到截圖；尚未設定轉送服務。") + (!ocrText.trim() ? " 尚未辨識圖片，請先按「辨識圖片文字」或手動填入文字。" : ""),
   });
 }
