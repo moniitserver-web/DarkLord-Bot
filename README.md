@@ -37,3 +37,5 @@ JSON 格式、限制與計算邏輯請看 [docs/modules.md](docs/modules.md)。
 遊戲截圖辨識與角色核對請看 [docs/screenshot-bot.md](docs/screenshot-bot.md)。
 Windows 執行方式請看 [docs/windows-runner.md](docs/windows-runner.md)。BlackLord 的 Windows 入口是 `scripts/start-blacklord-windows.bat`；舊的 `scripts/start-blacklord-windows.bat` 仍保留相容性。預設 dry-run，只有明確設定 native adapter 才會交給外部程式處理輸入。
 自動化控制台與 runner 請看 [docs/automation.md](docs/automation.md)；Windows 啟動方式請看 [docs/windows-runner.md](docs/windows-runner.md)。
+
+Docker 建置、測試與本機預覽見 [docs/docker.md](docs/docker.md)；參考 EXE/ZIP 靜態分析見 [docs/reference-inspector.md](docs/reference-inspector.md)。

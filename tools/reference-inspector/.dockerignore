@@ -1,0 +1,4 @@
+*
+!Dockerfile
+!inspect_reference.py
+!test_inspect_reference.py

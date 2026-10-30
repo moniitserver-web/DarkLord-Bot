@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+.git
+.env
+.env.*
+*.exe
+*.zip
+*.png
+*.tsbuildinfo
+.DS_Store
+smoke-logs
+ocr-logs
+reports
